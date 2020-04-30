@@ -9,6 +9,7 @@ function(str);
 ```
 
 **With parameter borrowing, without mutability**
+
 ```str``` can still be used in the scope it was declared in, but ```function()``` cannot change its value.
 ```
 let str = String::from("Hello");
@@ -18,6 +19,7 @@ returned the ownership of str to this scope after returning
 ```
 
 **With parameter borrowing and mutability**
+
 Makes ```str``` mutable, so its value can be changed in ```function```.
 ```
 let mut str = String::from("Hello");
