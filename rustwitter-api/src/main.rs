@@ -53,14 +53,14 @@ struct State {
 
  #[cfg(test)]
  mod test {
-    #[allow(unused_imports)]
-    use super::*;
+    use super::server;
+    use super::json;
 
     use http_types::{Method, Request, Url};
     use http_service_mock::make_server;
 
     #[async_std::test]
-    async fn a_test() {
+    async fn index_test() {
         let app = server().await;
         let mut server = make_server(app).unwrap();
 
@@ -70,7 +70,14 @@ struct State {
         );
 
         let res = server.simulate(req).unwrap();
+
+        let expected_body = json!({
+            "status": "Ok",
+            "data": {
+                "cutie": "nadia",
+            },
+        });
         assert_eq!(res.status(), 200);
-        assert_eq!(res.body_string().await.unwrap(), "{\"data\":{\"cutie\":\"nadia\"},\"status\":\"Ok\"}");
+        assert_eq!(res.body_string().await.unwrap(), expected_body.to_string());
     }
 }

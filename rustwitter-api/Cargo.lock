@@ -1213,7 +1213,6 @@ dependencies = [
  "async-std",
  "chrono",
  "dotenv",
- "futures",
  "http-service",
  "http-service-mock",
  "http-types",
