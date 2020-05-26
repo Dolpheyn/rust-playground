@@ -1,35 +1,76 @@
 use dotenv;
-use std::{ env::var };
-use sqlx::{ Pool, PgPool, query };
-use tide::{ Server, Request };
 
-#[async_std::main] 
+use serde_json::json;
+use sqlx::{query, PgPool, Pool};
+use std::env::var;
+use tide::{http, Request, Response, Server};
+
+#[async_std::main]
 async fn main() {
+    dotenv::dotenv().ok();
+
+    let app_url = var("APP_URL").unwrap();
+    let app_port = var("APP_PORT").unwrap();
+
+    let app: Server<State> = server().await;
+
+    app.listen(format!("{}:{}", app_url, app_port)).await.unwrap();
+}
+
+async fn server() -> Server<State> {
     dotenv::dotenv().ok();
     pretty_env_logger::init();
 
     let db_url = var("DATABASE_URL").unwrap();
-    let app_url = var("APP_URL").unwrap();
-    let app_port = var("APP_PORT").unwrap();
-
     let db_pool: PgPool = Pool::new(&db_url).await.unwrap();
 
-    let mut app: Server<State> = tide::with_state(State {
-	db_pool,
-    });
+    let mut app: Server<State> = tide::with_state(State { db_pool });
 
     app.at("/").get(|req: Request<State>| async move {
-	let db_pool = &req.state().db_pool;
-	let row = query!("select 'nadia' as cutie")
-	    .fetch_one(db_pool)
-	    .await.unwrap();
+        let db_pool = &req.state().db_pool;
+        let row = query!("select 'nadia' as cutie")
+            .fetch_one(db_pool)
+            .await
+            .unwrap();
 
-	Ok(format!("{}", row.cutie.unwrap()))
+        let json = json!({
+            "status": "Ok",
+            "data": {
+                "cutie": row.cutie,
+            },
+        });
+
+        Ok(Response::new(http::StatusCode::Ok).body_json(&json)?)
     });
-    app.listen(format!("{}:{}", app_url, app_port)).await.unwrap();
+
+    app
 }
 
 #[derive(Debug)]
 struct State {
     db_pool: PgPool,
+}
+
+ #[cfg(test)]
+ mod test {
+    #[allow(unused_imports)]
+    use super::*;
+
+    use http_types::{Method, Request, Url};
+    use http_service_mock::make_server;
+
+    #[async_std::test]
+    async fn a_test() {
+        let app = server().await;
+        let mut server = make_server(app).unwrap();
+
+        let req = Request::new(
+            Method::Get,
+            Url::parse("http://127.0.0.1:8000/").unwrap(),
+        );
+
+        let res = server.simulate(req).unwrap();
+        assert_eq!(res.status(), 200);
+        assert_eq!(res.body_string().await.unwrap(), "{\"data\":{\"cutie\":\"nadia\"},\"status\":\"Ok\"}");
+    }
 }
