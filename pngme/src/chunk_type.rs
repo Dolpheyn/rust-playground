@@ -16,8 +16,13 @@ impl ChunkType {
     pub fn is_valid(&self) -> bool {
         todo!()
     }
+
+    /// Returns true if bit 5 of the first byte in Self::bytes is 0,
+    /// else return false.
     pub fn is_public(&self) -> bool {
-        todo!()
+        let second_byte = self.bytes[1];
+
+        second_byte & 1 << 5 == 0
     }
     pub fn is_reserved_bit_valid(&self) -> bool {
         todo!()
