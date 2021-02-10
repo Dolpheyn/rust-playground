@@ -43,18 +43,17 @@ impl fmt::Display for ChunkType {
 }
 
 impl FromStr for ChunkType {
-    type Err = ();
+    type Err = std::io::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let s = s.as_bytes();
-        let bytes: [u8; 4] = s.try_into().expect("slice with incorrect length");
+        let bytes: [u8; 4] = s.as_bytes().try_into().expect("str with length 4");
 
         Ok(Self { bytes })
     }
 }
 
 impl TryFrom<[u8; 4]> for ChunkType {
-    type Error = ();
+    type Error = std::io::Error;
 
     fn try_from(value: [u8; 4]) -> Result<Self, Self::Error> {
         Ok(Self { bytes: value })
