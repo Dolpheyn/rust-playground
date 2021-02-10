@@ -22,8 +22,13 @@ impl ChunkType {
     pub fn is_reserved_bit_valid(&self) -> bool {
         todo!()
     }
+
+    /// Returns true if bit 5 of the first byte in Self::bytes is 0,
+    /// else return false.
     pub fn is_critical(&self) -> bool {
-        todo!()
+        let first_byte = self.bytes.first().expect("ChunkType::bytes is empty");
+
+        first_byte & 1 << 5 == 0
     }
     pub fn is_safe_to_copy(&self) -> bool {
         todo!()
