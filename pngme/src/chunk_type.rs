@@ -4,7 +4,7 @@ use std::str;
 use std::str::FromStr;
 
 #[derive(Debug, PartialEq)]
-struct ChunkType {
+pub struct ChunkType {
     bytes: [u8; 4],
 }
 
@@ -30,6 +30,7 @@ impl ChunkType {
 
         first_byte & 1 << 5 == 0
     }
+
     pub fn is_safe_to_copy(&self) -> bool {
         todo!()
     }
@@ -48,7 +49,7 @@ impl fmt::Display for ChunkType {
 }
 
 impl FromStr for ChunkType {
-    type Err = std::io::Error;
+    type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let bytes: [u8; 4] = s.as_bytes().try_into().expect("str with length 4");
@@ -58,10 +59,14 @@ impl FromStr for ChunkType {
 }
 
 impl TryFrom<[u8; 4]> for ChunkType {
-    type Error = std::io::Error;
+    type Error = String;
 
     fn try_from(value: [u8; 4]) -> Result<Self, Self::Error> {
-        Ok(Self { bytes: value })
+        if let true = value.iter().map(u8::is_ascii).all(|v| v) {
+            Ok(Self { bytes: value })
+        } else {
+            Err("Invalid ascii byte found".to_string())
+        }
     }
 }
 
