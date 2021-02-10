@@ -17,7 +17,7 @@ impl ChunkType {
         todo!()
     }
 
-    /// Returns true if bit 5 of the second byte in Self::bytes is 0,
+    /// Returns true if the 5th bit of the **second** byte in Self::bytes is 0,
     /// else return false.
     pub fn is_public(&self) -> bool {
         let second_byte = self.bytes[1];
@@ -28,7 +28,7 @@ impl ChunkType {
         todo!()
     }
 
-    /// Returns true if bit 5 of the first byte in Self::bytes is 0,
+    /// Returns true if the 5th bit of the **first** byte in Self::bytes is 0,
     /// else return false.
     pub fn is_critical(&self) -> bool {
         let first_byte = self.bytes.first().expect("ChunkType::bytes is empty");
