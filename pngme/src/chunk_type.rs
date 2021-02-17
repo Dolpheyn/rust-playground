@@ -60,6 +60,10 @@ impl FromStr for ChunkType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let bytes: [u8; 4] = s.as_bytes().try_into().expect("str with length 4");
 
+        if !bytes.iter().map(|b| b.is_ascii_alphabetic()).all(|b| b) {
+            return Err("ASCII alphabets only bish".into());
+        }
+
         Ok(Self { bytes })
     }
 }
