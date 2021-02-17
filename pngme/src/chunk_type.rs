@@ -14,30 +14,31 @@ impl ChunkType {
     }
 
     pub fn is_valid(&self) -> bool {
-        todo!()
+        self.is_reserved_bit_valid()
     }
 
-    /// Returns true if the 5th bit of the **second** byte in Self::bytes is 0,
-    /// else return false.
-    pub fn is_public(&self) -> bool {
-        let second_byte = self.bytes[1];
-
-        second_byte & 1 << 5 == 0
-    }
-    pub fn is_reserved_bit_valid(&self) -> bool {
-        todo!()
-    }
-
-    /// Returns true if the 5th bit of the **first** byte in Self::bytes is 0,
-    /// else return false.
+    /// Returns true if the 5th bit of the **first** byte in Self::bytes is **0**
+    /// (first character in chunk name is uppercase), else return false.
     pub fn is_critical(&self) -> bool {
-        let first_byte = self.bytes.first().expect("ChunkType::bytes is empty");
-
-        first_byte & 1 << 5 == 0
+        self.bytes[0] & 1 << 5 == 0
     }
 
+    /// Returns true if the 5th bit of the **second** byte in Self::bytes is **0**
+    /// (second character in chunk name is uppercase), else return false.
+    pub fn is_public(&self) -> bool {
+        self.bytes[1] & 1 << 5 == 0
+    }
+
+    /// Returns true if the 5th bit of the **third** byte in Self::bytes is **0**,
+    /// (third character in chunk name is uppercase), else return false.
+    pub fn is_reserved_bit_valid(&self) -> bool {
+        self.bytes[2] & 1 << 5 == 0
+    }
+
+    /// Returns true if the 5th bit of the **fourth** byte in Self::bytes is **not 0**
+    /// (fourth character in chunk name is lowercase), else return false.
     pub fn is_safe_to_copy(&self) -> bool {
-        todo!()
+        self.bytes[3] & 1 << 5 != 0
     }
 }
 
