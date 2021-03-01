@@ -4,6 +4,7 @@ use std::convert::{TryFrom, TryInto};
 
 #[derive(Debug)]
 struct Chunk {
+    length: u32,
     chunk_type: ChunkType,
     data: Vec<u8>,
     crc: u32,
@@ -11,7 +12,7 @@ struct Chunk {
 
 impl<'a> Chunk {
     fn length(&self) -> u32 {
-        self.data.len() as u32 + self.chunk_type.bytes().len() as u32
+        self.length
     }
 
     fn chunk_type(&self) -> &ChunkType {
@@ -27,21 +28,26 @@ impl<'a> Chunk {
     }
 }
 
-impl<'a> TryFrom<&'a [u8]> for Chunk {
+impl TryFrom<&[u8]> for Chunk {
     type Error = Error;
 
-    fn try_from(value: &'a [u8]) -> crate::Result<Self> {
-        if value.len() < 8 {
-            return Err(Box::new(StrError("Length must be at least 8")));
+    fn try_from(value: &[u8]) -> crate::Result<Self> {
+        if value.len() < 12 {
+            return Err(Box::new(StrError("Length must be at least 12")));
         }
 
-        let chunk_type: [u8; 4] = value.get(0..=3).unwrap().try_into().unwrap();
+        let (length, rest) = value.split_at(4);
+        let length = length.iter().fold(0, |acc: u32, n| acc + *n as u32);
+
+        let (chunk_type, rest) = rest.split_at(4);
+        let chunk_type: [u8; 4] = chunk_type.try_into().unwrap();
         let chunk_type = ChunkType::try_from(chunk_type).unwrap();
 
-        let (data, crc) = value.split_at(value.len() - 4);
+        let (data, crc) = rest.split_at(rest.len() - 4);
         let crc: u32 = crc.iter().fold(0, |acc: u32, n| acc + *n as u32);
 
         Ok(Self {
+            length,
             chunk_type,
             data: data.to_owned(),
             crc,
