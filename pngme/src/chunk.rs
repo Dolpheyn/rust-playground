@@ -9,6 +9,24 @@ struct Chunk {
     crc: u32,
 }
 
+impl<'a> Chunk {
+    fn length(&self) -> u32 {
+        self.data.len() as u32 + self.chunk_type.bytes().len() as u32
+    }
+
+    fn chunk_type(&self) -> &ChunkType {
+        &self.chunk_type
+    }
+
+    fn data_as_string(&self) -> Result<String, Error> {
+        Ok(String::from_utf8(self.data.to_owned()).unwrap())
+    }
+
+    fn crc(&self) -> u32 {
+        self.crc
+    }
+}
+
 impl<'a> TryFrom<&'a [u8]> for Chunk {
     type Error = Error;
 
