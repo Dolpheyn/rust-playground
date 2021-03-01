@@ -1,3 +1,36 @@
+use crate::chunk_type::ChunkType;
+use crate::{Error, StrError};
+use std::convert::{TryFrom, TryInto};
+
+#[derive(Debug)]
+struct Chunk {
+    chunk_type: ChunkType,
+    data: Vec<u8>,
+    crc: u32,
+}
+
+impl<'a> TryFrom<&'a [u8]> for Chunk {
+    type Error = Error;
+
+    fn try_from(value: &'a [u8]) -> crate::Result<Self> {
+        if value.len() < 8 {
+            return Err(Box::new(StrError("Length must be at least 8")));
+        }
+
+        let chunk_type: [u8; 4] = value.get(0..=3).unwrap().try_into().unwrap();
+        let chunk_type = ChunkType::try_from(chunk_type).unwrap();
+
+        let (data, crc) = value.split_at(value.len() - 4);
+        let crc: u32 = crc.iter().fold(0, |acc: u32, n| acc + *n as u32);
+
+        Ok(Self {
+            chunk_type,
+            data: data.to_owned(),
+            crc,
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
