@@ -74,8 +74,12 @@ impl TryFrom<&[u8]> for Chunk {
         let crc: u32 = u32::from_be_bytes(crc_bytes.try_into().unwrap());
         let to_be_checksum: Vec<u8> = chunk_type_bytes.iter().chain(data_bytes).copied().collect();
 
+        if length != (chunk_type_bytes.len() as u32 + data_bytes.len() as u32) {
+            return Err(Box::new(StrError("Invalid chunk length")));
+        }
+
         if checksum_ieee(&to_be_checksum) != crc {
-            return Err(Box::new(StrError("Invalid checksum")));
+            return Err(Box::new(StrError("Invalid chunk checksum")));
         }
 
         Ok(Self {
