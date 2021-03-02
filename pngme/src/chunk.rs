@@ -37,21 +37,26 @@ impl TryFrom<&[u8]> for Chunk {
             return Err(Box::new(StrError("Length must be at least 12")));
         }
 
-        let (length, rest) = value.split_at(4);
-        let length = length.iter().fold(0, |acc: u32, n| acc + *n as u32);
+        let (length_bytes, rest) = value.split_at(4);
+        let length = u32::from_be_bytes(length_bytes.try_into().unwrap());
 
-        let (chunk_type, rest) = rest.split_at(4);
-        let chunk_type: [u8; 4] = chunk_type.try_into().unwrap();
-        let chunk_type = ChunkType::try_from(chunk_type).unwrap();
+        let (chunk_type_bytes, rest) = rest.split_at(4);
+        let chunk_type_bytes: [u8; 4] = chunk_type_bytes.try_into().unwrap();
+        let chunk_type = ChunkType::try_from(chunk_type_bytes).unwrap();
 
-        let (data, _) = rest.split_at(rest.len() - 4);
-        //let crc: u32 = crc.iter().fold(0, |acc: u32, n| acc + *n as u32);
+        let (data_bytes, crc_bytes) = rest.split_at(rest.len() - 4);
+        let crc: u32 = u32::from_be_bytes(crc_bytes.try_into().unwrap());
+        let to_be_checksum: Vec<u8> = chunk_type_bytes.iter().chain(data_bytes).copied().collect();
+
+        if checksum_ieee(&to_be_checksum) != crc {
+            return Err(Box::new(StrError("Invalid checksum")));
+        }
 
         Ok(Self {
             length,
             chunk_type,
-            data: data.to_owned(),
-            //crc,
+            data: data_bytes.to_owned(),
+            crc,
         })
     }
 }
