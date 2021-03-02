@@ -1,3 +1,53 @@
+use crate::chunk::Chunk;
+use std::convert::TryFrom;
+use std::fmt;
+
+pub struct Png {
+    chunks: Vec<Chunk>,
+}
+
+impl Png {
+    const STANDARD_HEADER: &'static [u8] = &[137, 80, 78, 71, 13, 10, 26, 10];
+
+    fn from_chunks(chunks: Vec<Chunk>) -> Png {
+        Png { chunks }
+    }
+
+    fn append_chunk(&self, _: Chunk) {
+        todo!()
+    }
+
+    fn remove_chunk(&self, _: &str) -> crate::Result<()> {
+        todo!()
+    }
+
+    fn as_bytes(&self) -> Vec<u8> {
+        todo!()
+    }
+
+    fn chunk_by_type(&self, _: &str) -> Option<&Chunk> {
+        todo!()
+    }
+
+    fn chunks(&self) -> Vec<Chunk> {
+        self.chunks.to_owned()
+    }
+}
+
+impl TryFrom<&[u8]> for Png {
+    type Error = crate::Error;
+
+    fn try_from(_: &[u8]) -> crate::Result<Self> {
+        todo!()
+    }
+}
+
+impl fmt::Display for Png {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        todo!()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
