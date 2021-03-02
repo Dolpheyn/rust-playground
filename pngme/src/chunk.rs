@@ -21,7 +21,7 @@ impl<'a> Chunk {
             .collect::<Vec<u8>>();
 
         let crc = checksum_ieee(chunk_type_and_data_bytes.as_ref());
-        let length: u32 = data.len() as u32 + chunk_type.bytes().len() as u32;
+        let length: u32 = data.len() as u32;
 
         let value: Vec<u8> = length
             .to_be_bytes()
@@ -81,7 +81,7 @@ impl TryFrom<&[u8]> for Chunk {
         let crc: u32 = u32::from_be_bytes(crc_bytes.try_into().unwrap());
         let to_be_checksum: Vec<u8> = chunk_type_bytes.iter().chain(data_bytes).copied().collect();
 
-        if length != (chunk_type_bytes.len() as u32 + data_bytes.len() as u32) {
+        if length != data_bytes.len() as u32 {
             return Err(Box::new(StrError("Invalid chunk length")));
         }
 
