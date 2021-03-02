@@ -1,6 +1,9 @@
 use crate::chunk::Chunk;
-use std::convert::TryFrom;
+use crate::chunk_type::ChunkType;
+use crate::StrError;
+use std::convert::{TryFrom, TryInto};
 use std::fmt;
+use std::str::FromStr;
 
 pub struct Png {
     chunks: Vec<Chunk>,
@@ -13,8 +16,8 @@ impl Png {
         Png { chunks }
     }
 
-    fn append_chunk(&self, _: Chunk) {
-        todo!()
+    fn append_chunk(&mut self, chunk: Chunk) {
+        self.chunks.push(chunk);
     }
 
     fn remove_chunk(&self, _: &str) -> crate::Result<()> {
@@ -25,8 +28,14 @@ impl Png {
         todo!()
     }
 
-    fn chunk_by_type(&self, _: &str) -> Option<&Chunk> {
-        todo!()
+    fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
+        if let Some(chunk_idx) = self.chunks().into_iter().position(|chunk| {
+            std::str::from_utf8(&chunk.chunk_type().bytes().to_owned()).unwrap() == chunk_type
+        }) {
+            Some(&self.chunks[chunk_idx])
+        } else {
+            None
+        }
     }
 
     fn chunks(&self) -> Vec<Chunk> {
