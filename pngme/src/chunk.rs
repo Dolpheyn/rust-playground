@@ -3,8 +3,8 @@ use crate::{Error, StrError};
 use crc::crc32::checksum_ieee;
 use std::convert::{TryFrom, TryInto};
 
-#[derive(Debug)]
-struct Chunk {
+#[derive(Debug, Clone)]
+pub struct Chunk {
     length: u32,
     chunk_type: ChunkType,
     data: Vec<u8>,
