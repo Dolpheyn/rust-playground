@@ -1,5 +1,6 @@
 use crate::chunk_type::ChunkType;
 use crate::{Error, StrError};
+use crc::crc32::checksum_ieee;
 use std::convert::{TryFrom, TryInto};
 
 #[derive(Debug)]
@@ -7,7 +8,7 @@ struct Chunk {
     length: u32,
     chunk_type: ChunkType,
     data: Vec<u8>,
-    crc: u32,
+    //crc: u32,
 }
 
 impl<'a> Chunk {
@@ -24,7 +25,15 @@ impl<'a> Chunk {
     }
 
     fn crc(&self) -> u32 {
-        self.crc
+        let data: Vec<u8> = self
+            .chunk_type
+            .bytes()
+            .iter()
+            .chain(&self.data)
+            .copied()
+            .collect();
+
+        checksum_ieee(&data)
     }
 }
 
@@ -43,14 +52,14 @@ impl TryFrom<&[u8]> for Chunk {
         let chunk_type: [u8; 4] = chunk_type.try_into().unwrap();
         let chunk_type = ChunkType::try_from(chunk_type).unwrap();
 
-        let (data, crc) = rest.split_at(rest.len() - 4);
-        let crc: u32 = crc.iter().fold(0, |acc: u32, n| acc + *n as u32);
+        let (data, _) = rest.split_at(rest.len() - 4);
+        //let crc: u32 = crc.iter().fold(0, |acc: u32, n| acc + *n as u32);
 
         Ok(Self {
             length,
             chunk_type,
             data: data.to_owned(),
-            crc,
+            //crc,
         })
     }
 }
