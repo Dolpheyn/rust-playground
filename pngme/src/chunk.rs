@@ -8,7 +8,7 @@ struct Chunk {
     length: u32,
     chunk_type: ChunkType,
     data: Vec<u8>,
-    //crc: u32,
+    crc: u32,
 }
 
 impl<'a> Chunk {
@@ -25,15 +25,7 @@ impl<'a> Chunk {
     }
 
     fn crc(&self) -> u32 {
-        let data: Vec<u8> = self
-            .chunk_type
-            .bytes()
-            .iter()
-            .chain(&self.data)
-            .copied()
-            .collect();
-
-        checksum_ieee(&data)
+        self.crc
     }
 }
 
