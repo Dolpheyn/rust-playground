@@ -12,19 +12,45 @@ pub struct Chunk {
 }
 
 impl<'a> Chunk {
-    fn length(&self) -> u32 {
+    pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> Self {
+        let chunk_type_and_data_bytes: Vec<u8> = chunk_type
+            .bytes()
+            .iter()
+            .chain(data.iter())
+            .copied()
+            .collect::<Vec<u8>>();
+
+        let crc = checksum_ieee(chunk_type_and_data_bytes.as_ref());
+        let length: u32 = data.len() as u32 + chunk_type.bytes().len() as u32;
+
+        let value: Vec<u8> = length
+            .to_be_bytes()
+            .iter()
+            .chain(chunk_type_and_data_bytes.iter())
+            .chain(crc.to_be_bytes().iter())
+            .copied()
+            .collect();
+
+        Self::try_from(value.as_ref()).unwrap()
+    }
+
+    pub fn as_bytes(&self) -> Vec<u8> {
+        todo!()
+    }
+
+    pub fn length(&self) -> u32 {
         self.length
     }
 
-    fn chunk_type(&self) -> &ChunkType {
+    pub fn chunk_type(&self) -> &ChunkType {
         &self.chunk_type
     }
 
-    fn data_as_string(&self) -> Result<String, Error> {
+    pub fn data_as_string(&self) -> Result<String, Error> {
         Ok(String::from_utf8(self.data.to_owned()).unwrap())
     }
 
-    fn crc(&self) -> u32 {
+    pub fn crc(&self) -> u32 {
         self.crc
     }
 }
