@@ -2,6 +2,7 @@ use crate::chunk_type::ChunkType;
 use crate::{Error, StrError};
 use crc::crc32::checksum_ieee;
 use std::convert::{TryFrom, TryInto};
+use std::fmt;
 
 #[derive(Debug, Clone)]
 pub struct Chunk {
@@ -95,6 +96,12 @@ impl TryFrom<&[u8]> for Chunk {
             data: data_bytes.to_owned(),
             crc,
         })
+    }
+}
+
+impl fmt::Display for Chunk {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self.chunk_type().bytes())
     }
 }
 
@@ -210,8 +217,8 @@ mod tests {
             .copied()
             .collect();
 
-        let _chunk: Chunk = TryFrom::try_from(chunk_data.as_ref()).unwrap();
+        let chunk: Chunk = TryFrom::try_from(chunk_data.as_ref()).unwrap();
 
-        // let _chunk_string = format!("{}", chunk);
+        let _chunk_string = format!("{}", chunk);
     }
 }
