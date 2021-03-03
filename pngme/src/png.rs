@@ -20,8 +20,19 @@ impl Png {
         self.chunks.push(chunk);
     }
 
-    fn remove_chunk(&self, _: &str) -> crate::Result<()> {
-        todo!()
+    fn chunk_position_by_type(&self, chunk_type: &str) -> Option<usize> {
+        self.chunks().into_iter().position(|chunk| {
+            std::str::from_utf8(&chunk.chunk_type().bytes().to_owned()).unwrap() == chunk_type
+        })
+    }
+
+    fn remove_chunk(&mut self, chunk_type: &str) -> crate::Result<()> {
+        if let Some(chunk_idx) = self.chunk_position_by_type(chunk_type) {
+            self.chunks.remove(chunk_idx);
+            Ok(())
+        } else {
+            Err(Box::new(StrError("Chunk does not exist")))
+        }
     }
 
     fn as_bytes(&self) -> Vec<u8> {
@@ -29,9 +40,7 @@ impl Png {
     }
 
     fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
-        if let Some(chunk_idx) = self.chunks().into_iter().position(|chunk| {
-            std::str::from_utf8(&chunk.chunk_type().bytes().to_owned()).unwrap() == chunk_type
-        }) {
+        if let Some(chunk_idx) = self.chunk_position_by_type(chunk_type) {
             Some(&self.chunks[chunk_idx])
         } else {
             None
