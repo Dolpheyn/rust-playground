@@ -1,9 +1,7 @@
 use crate::chunk::Chunk;
-use crate::chunk_type::ChunkType;
 use crate::StrError;
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
-use std::str::FromStr;
 
 pub struct Png {
     chunks: Vec<Chunk>,
