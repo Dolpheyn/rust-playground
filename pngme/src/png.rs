@@ -36,7 +36,11 @@ impl Png {
     }
 
     fn as_bytes(&self) -> Vec<u8> {
-        todo!()
+        Png::STANDARD_HEADER
+            .iter()
+            .copied()
+            .chain(self.chunks().iter().map(|chunk| chunk.as_bytes()).flatten())
+            .collect()
     }
 
     fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
