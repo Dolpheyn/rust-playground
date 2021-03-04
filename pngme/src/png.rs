@@ -81,16 +81,9 @@ impl TryFrom<&[u8]> for Png {
             assert_eq!(length, data_bytes.len() as u32 - 8);
             ptr += data_size;
 
-            let chunk: Chunk = Chunk::try_from(
-                Vec::new()
-                    .iter()
-                    .chain(length_bytes.iter())
-                    .chain(data_bytes)
-                    .copied()
-                    .collect::<Vec<_>>()
-                    .as_ref(),
-            )
-            .unwrap();
+            let chunk: Chunk =
+                Chunk::try_from([&length_bytes as &[u8], data_bytes].concat().as_ref()).unwrap();
+
             chunks.push(chunk);
 
             if chunks_bytes.len() == ptr {
