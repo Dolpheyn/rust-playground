@@ -59,14 +59,52 @@ impl Png {
 impl TryFrom<&[u8]> for Png {
     type Error = crate::Error;
 
-    fn try_from(_: &[u8]) -> crate::Result<Self> {
-        todo!()
+    fn try_from(bytes: &[u8]) -> crate::Result<Self> {
+        let (header_bytes, chunks_bytes) = bytes.split_at(8);
+        let header: [u8; 8] = header_bytes.try_into().unwrap();
+
+        if header != Png::STANDARD_HEADER {
+            return Err(Box::new(StrError("Invalid png header")));
+        }
+
+        let mut chunks = Vec::new();
+        let mut ptr = 0;
+        loop {
+            let length_bytes = chunks_bytes.get(ptr..(ptr + 4)).unwrap();
+            ptr += 4;
+
+            let length_bytes: [u8; 4] = length_bytes.try_into().unwrap();
+            let length = u32::from_be_bytes(length_bytes);
+
+            let data_size: usize = 4 + length as usize + 4;
+            let data_bytes = chunks_bytes.get(ptr..(ptr + data_size)).unwrap();
+            assert_eq!(length, data_bytes.len() as u32 - 8);
+            ptr += data_size;
+
+            let chunk: Chunk = Chunk::try_from(
+                Vec::new()
+                    .iter()
+                    .chain(length_bytes.iter())
+                    .chain(data_bytes)
+                    .copied()
+                    .collect::<Vec<_>>()
+                    .as_ref(),
+            )
+            .unwrap();
+            chunks.push(chunk);
+
+            if chunks_bytes.len() == ptr {
+                break;
+            }
+        }
+
+        Ok(Self { chunks })
     }
 }
 
 impl fmt::Display for Png {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        todo!()
+        write!(f, "{:?}", self.chunks())
     }
 }
 
