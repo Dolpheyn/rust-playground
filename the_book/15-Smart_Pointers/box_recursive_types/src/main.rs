@@ -7,7 +7,7 @@ enum List {
 /**
  * Error: recursive type has infinite size
  *
- * When compiling, a rust defines enum's size as the variant that takes the most space. In List,
+ * When compiling, rust defines enum's size as the variant that takes the most space. In List,
  * the variant that takes the most space is `Cons(i32, List)`.
  *
  * In order to determine how much space `Cons` takes, the value of i32 + the value of `List` must
