@@ -3,7 +3,7 @@ use std::io;
 use crossterm::{
     cursor::{MoveLeft, MoveRight, MoveToNextLine},
     event::{read, Event, KeyCode, KeyEvent, KeyModifiers},
-    style::Print,
+    style::{Color, Print, ResetColor, SetForegroundColor},
     terminal, ExecutableCommand, Result,
 };
 
@@ -20,7 +20,10 @@ fn main() -> Result<()> {
 
     'outer: loop {
         buffer.clear();
-        stdout.execute(Print("lispy > "))?;
+        stdout
+            .execute(SetForegroundColor(Color::Blue))?
+            .execute(Print("lispy > "))?
+            .execute(ResetColor)?;
 
         'inner: loop {
             match read()? {
