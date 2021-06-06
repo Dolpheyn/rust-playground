@@ -1,7 +1,7 @@
 use std::io;
 
 use crossterm::{
-    cursor::{MoveToNextLine, RestorePosition},
+    cursor::{MoveLeft, MoveRight, MoveToNextLine},
     event::{read, Event, KeyCode, KeyEvent, KeyModifiers},
     style::Print,
     terminal, ExecutableCommand, Result,
@@ -34,13 +34,27 @@ fn main() -> Result<()> {
                             buffer.push(c);
                             stdout.execute(Print(c))?;
                         }
-                        KeyCode::Backspace => {}
+                        KeyCode::Backspace => {
+                            if buffer.len() == 0 {
+                                continue;
+                            }
+
+                            buffer.pop();
+                            stdout
+                                .execute(MoveLeft(1))?
+                                .execute(Print(" "))?
+                                .execute(MoveLeft(1))?;
+                        }
                         KeyCode::Enter => {
                             stdout.execute(MoveToNextLine(1))?;
                             break 'inner;
                         }
-                        KeyCode::Left => {}
-                        KeyCode::Right => {}
+                        KeyCode::Left => {
+                            stdout.execute(MoveLeft(1))?;
+                        }
+                        KeyCode::Right => {
+                            stdout.execute(MoveRight(1))?;
+                        }
                         KeyCode::Up => {}
                         KeyCode::Down => {}
                         KeyCode::Home => {}
