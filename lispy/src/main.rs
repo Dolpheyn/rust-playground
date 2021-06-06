@@ -38,7 +38,7 @@ fn main() -> Result<()> {
                             stdout.execute(Print(c))?;
                         }
                         KeyCode::Backspace => {
-                            if buffer.len() == 0 {
+                            if buffer.is_empty() {
                                 continue;
                             }
 
