@@ -75,6 +75,11 @@ fn main() -> Result<()> {
             }
         }
 
+        if buffer.is_empty() {
+            stdout.execute(MoveToNextLine(1))?;
+            continue;
+        }
+
         if buffer == "exit" {
             break 'repl;
         }
