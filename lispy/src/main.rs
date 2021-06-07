@@ -1,10 +1,11 @@
 use std::io::{self, Write};
 
 use crossterm::{
-    cursor::{MoveLeft, MoveRight, MoveToNextLine},
+    cursor::{MoveLeft, MoveRight, MoveTo, MoveToNextLine},
     event::{read, Event, KeyCode, KeyEvent, KeyModifiers},
     style::{Color, Print, ResetColor, SetForegroundColor},
-    terminal, ExecutableCommand, QueueableCommand, Result,
+    terminal::{self, Clear, ClearType},
+    ExecutableCommand, QueueableCommand, Result,
 };
 
 fn main() -> Result<()> {
@@ -13,10 +14,12 @@ fn main() -> Result<()> {
     terminal::enable_raw_mode()?;
 
     stdout
+        .queue(Clear(ClearType::All))?
+        .queue(MoveTo(0, 0))?
         .queue(Print("Lispy Version 0.1.0"))?
         .queue(MoveToNextLine(1))?
         .queue(Print("Press Ctrl + c to Exit"))?
-        .queue(MoveToNextLine(3))?;
+        .queue(MoveToNextLine(2))?;
     stdout.flush()?;
 
     'repl: loop {
