@@ -52,7 +52,6 @@ fn main() -> Result<()> {
                             stdout.flush()?;
                         }
                         KeyCode::Enter => {
-                            stdout.execute(MoveToNextLine(1))?;
                             break 'input;
                         }
                         KeyCode::Left => {
@@ -74,6 +73,7 @@ fn main() -> Result<()> {
         }
 
         stdout
+            .queue(MoveToNextLine(1))?
             .queue(Print("Lispy says: "))?
             .queue(Print(&buffer))?
             .queue(MoveToNextLine(1))?;
