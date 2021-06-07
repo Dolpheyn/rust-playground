@@ -72,6 +72,10 @@ fn main() -> Result<()> {
             }
         }
 
+        if buffer == "exit" {
+            break 'repl;
+        }
+
         stdout
             .queue(MoveToNextLine(1))?
             .queue(Print("Lispy says: "))?
@@ -79,6 +83,9 @@ fn main() -> Result<()> {
             .queue(MoveToNextLine(1))?;
         stdout.flush()?;
     }
+
+    stdout.queue(MoveToNextLine(1))?.queue(Print("Bye bye!"))?;
+    stdout.flush()?;
 
     terminal::disable_raw_mode()?;
     Ok(())
