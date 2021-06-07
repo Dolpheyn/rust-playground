@@ -23,7 +23,6 @@ fn main() -> Result<()> {
     stdout.flush()?;
 
     'repl: loop {
-        buffer.clear();
         stdout
             .queue(SetForegroundColor(Color::Blue))?
             .queue(Print("lispy > "))?
@@ -90,6 +89,7 @@ fn main() -> Result<()> {
             .queue(Print(&buffer))?
             .queue(MoveToNextLine(1))?;
         stdout.flush()?;
+        buffer.clear();
     }
 
     stdout.queue(MoveToNextLine(1))?.queue(Print("Bye bye!"))?;
