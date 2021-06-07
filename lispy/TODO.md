@@ -5,6 +5,7 @@
   * [X] Output buffer
   * [X] Backspace
   * [X] Exiting (on `Ctrl + c` and "exit")
+  * [ ] Editing in the middle of buffer
 
 * [ ] Polish Notation (pre Lisp)
   * [ ] Get a Parser Combinator working (use nom?)
