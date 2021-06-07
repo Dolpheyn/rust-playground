@@ -1,10 +1,10 @@
-use std::io;
+use std::io::{self, Write};
 
 use crossterm::{
     cursor::{MoveLeft, MoveRight, MoveToNextLine},
     event::{read, Event, KeyCode, KeyEvent, KeyModifiers},
     style::{Color, Print, ResetColor, SetForegroundColor},
-    terminal, ExecutableCommand, Result,
+    terminal, ExecutableCommand, QueueableCommand, Result,
 };
 
 fn main() -> Result<()> {
@@ -13,17 +13,19 @@ fn main() -> Result<()> {
     terminal::enable_raw_mode()?;
 
     stdout
-        .execute(Print("Lispy Version 0.1.0"))?
-        .execute(MoveToNextLine(1))?
-        .execute(Print("Press Ctrl + c to Exit"))?
-        .execute(MoveToNextLine(3))?;
+        .queue(Print("Lispy Version 0.1.0"))?
+        .queue(MoveToNextLine(1))?
+        .queue(Print("Press Ctrl + c to Exit"))?
+        .queue(MoveToNextLine(3))?;
+    stdout.flush()?;
 
     'repl: loop {
         buffer.clear();
         stdout
-            .execute(SetForegroundColor(Color::Blue))?
-            .execute(Print("lispy > "))?
-            .execute(ResetColor)?;
+            .queue(SetForegroundColor(Color::Blue))?
+            .queue(Print("lispy > "))?
+            .queue(ResetColor)?;
+        stdout.flush()?;
 
         'input: loop {
             match read()? {
@@ -44,9 +46,10 @@ fn main() -> Result<()> {
 
                             buffer.pop();
                             stdout
-                                .execute(MoveLeft(1))?
-                                .execute(Print(" "))?
-                                .execute(MoveLeft(1))?;
+                                .queue(MoveLeft(1))?
+                                .queue(Print(" "))?
+                                .queue(MoveLeft(1))?;
+                            stdout.flush()?;
                         }
                         KeyCode::Enter => {
                             stdout.execute(MoveToNextLine(1))?;
@@ -71,9 +74,10 @@ fn main() -> Result<()> {
         }
 
         stdout
-            .execute(Print("Lispy says: "))?
-            .execute(Print(&buffer))?
-            .execute(MoveToNextLine(2))?;
+            .queue(Print("Lispy says: "))?
+            .queue(Print(&buffer))?
+            .queue(MoveToNextLine(1))?;
+        stdout.flush()?;
     }
 
     terminal::disable_raw_mode()?;
