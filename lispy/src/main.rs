@@ -18,18 +18,18 @@ fn main() -> Result<()> {
         .execute(Print("Press Ctrl + c to Exit"))?
         .execute(MoveToNextLine(3))?;
 
-    'outer: loop {
+    'repl: loop {
         buffer.clear();
         stdout
             .execute(SetForegroundColor(Color::Blue))?
             .execute(Print("lispy > "))?
             .execute(ResetColor)?;
 
-        'inner: loop {
+        'input: loop {
             match read()? {
                 Event::Key(KeyEvent { code, modifiers }) => {
                     if modifiers == KeyModifiers::CONTROL && code == KeyCode::Char('c') {
-                        break 'outer;
+                        break 'repl;
                     }
 
                     match code {
@@ -50,7 +50,7 @@ fn main() -> Result<()> {
                         }
                         KeyCode::Enter => {
                             stdout.execute(MoveToNextLine(1))?;
-                            break 'inner;
+                            break 'input;
                         }
                         KeyCode::Left => {
                             stdout.execute(MoveLeft(1))?;
