@@ -11,7 +11,7 @@
   * [X] Home and End
 
 * [ ] Polish Notation (pre Lisp)
-  * [ ] Get a Parser Combinator working (use nom?)
+  * [ ] ~~Get a Parser Combinator working (use nom?)~~ Write a parser
   * [ ] Parse polish notation
   * [ ] Eval polish notation
 
