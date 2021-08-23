@@ -1,7 +1,10 @@
+mod eval;
 mod parse;
 mod repl;
 
 use crossterm::{terminal, Result};
+use eval::eval;
+use parse::parse;
 use repl::{get_input, print_eval, print_prompt, print_ver, ReplInput};
 use std::io::{self, Stdout};
 
@@ -26,8 +29,9 @@ fn run(stdout: &mut Stdout) -> Result<()> {
         // let ast = parse(source)?;
         // let res = eval(ast)?;
 
-        let res = source;
-        print_eval(stdout, res)?;
+        let ast = parse(source.clone()).unwrap();
+        let res = eval(ast);
+        print_eval(stdout, res.to_string())?;
     }
 
     terminal::disable_raw_mode()?;
