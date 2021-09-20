@@ -1,7 +1,0 @@
-#!/bin/bash
-set -e
-
-dropdb rustwitter || true
-createdb rustwitter || true
-
-psql -d rustwitter < scripts/up.sql
