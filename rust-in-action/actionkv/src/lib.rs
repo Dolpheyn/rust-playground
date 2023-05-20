@@ -91,8 +91,8 @@ impl ActionKV {
             panic!("data corruption encountered, checksum mismatched")
         }
 
-        let key = data.split_off(key_len as usize);
-        let value = data;
+        let value = data.split_off(key_len as usize);
+        let key = data;
 
         Ok(KeyValuePair { key, value })
     }
@@ -126,7 +126,11 @@ impl ActionKV {
 #[cfg(test)]
 mod tests {
     use crate::{ActionKV, ByteString};
-    use std::{collections::HashMap, fs::File};
+    use std::{
+        collections::HashMap,
+        fs::File,
+        io::{Seek, SeekFrom},
+    };
     use tempfile::tempdir;
 
     fn open_store_at_tmp_file(file_name: &str) -> ActionKV {
@@ -151,14 +155,17 @@ mod tests {
 
     #[test]
     fn test_load() {
-        let file_name = "test_load";
+        let mut store =
+            create_store_with_test_data("test_load", vec![("key1", "val1"), ("key2", "val2")]);
 
-        create_store_with_test_data(file_name.clone(), vec![("lol", "lul"), ("haha", "huhu")]);
-
-        let mut store = open_store_at_tmp_file(file_name);
+        // reset index and file, then reload
+        store.index.clear();
+        store.f.seek(SeekFrom::Start(0)).expect("seek");
         store.load().expect("load");
 
-        dbg!(store.index);
+        let expected_loaded_index: HashMap<ByteString, u64> =
+            HashMap::from([(vec![107, 101, 121, 49], 0), (vec![107, 101, 121, 50], 20)]);
+        assert_eq!(store.index, expected_loaded_index);
     }
 
     #[test]
