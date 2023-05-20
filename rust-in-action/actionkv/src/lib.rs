@@ -13,7 +13,7 @@ pub const CRC_32: Crc<u32> = Crc::<u32>::new(&CRC_32_CKSUM);
 type ByteString = Vec<u8>;
 type ByteStr = [u8];
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub struct KeyValuePair {
     pub key: ByteString,
     pub value: ByteString,
@@ -109,14 +109,13 @@ impl ActionKV {
 
         let checksum = CRC_32.checksum(&data_buf);
 
-        let next_byte = SeekFrom::End(0);
-        let start_position = f.seek(SeekFrom::Current(0))?;
-        f.seek(next_byte)?;
+        let start_position = f.stream_position()?;
         f.write_u32::<LittleEndian>(checksum)?;
         f.write_u32::<LittleEndian>(key_len as u32)?;
         f.write_u32::<LittleEndian>(val_len as u32)?;
         f.write_all(&mut data_buf)?;
 
+        f.flush()?;
         self.index.insert(key.to_vec(), start_position);
 
         Ok(())
@@ -125,12 +124,8 @@ impl ActionKV {
 
 #[cfg(test)]
 mod tests {
-    use crate::{ActionKV, ByteString};
-    use std::{
-        collections::HashMap,
-        fs::File,
-        io::{Seek, SeekFrom},
-    };
+    use crate::{ActionKV, ByteString, KeyValuePair};
+    use std::{collections::HashMap, fs::File, io::Seek};
     use tempfile::tempdir;
 
     fn open_store_at_tmp_file(file_name: &str) -> ActionKV {
@@ -154,13 +149,35 @@ mod tests {
     }
 
     #[test]
+    fn test_process_record() {
+        let checksum = &[216, 251, 175, 55];
+        let u32_4_little_endian = &[4, 0, 0, 0];
+        let key = "key1".as_bytes();
+        let value = "val1".as_bytes();
+
+        let mut data_buf = Vec::new();
+        data_buf.extend_from_slice(checksum); // checksum
+        data_buf.extend_from_slice(u32_4_little_endian); // key_len
+        data_buf.extend_from_slice(u32_4_little_endian); // val_len
+        data_buf.extend_from_slice(key.clone()); // key
+        data_buf.extend_from_slice(value.clone()); // value
+
+        let got_kv = ActionKV::process_record(&mut data_buf.as_slice()).expect("process_record");
+        let expected_kv = KeyValuePair {
+            key: key.to_vec(),
+            value: value.to_vec(),
+        };
+        assert_eq!(got_kv, expected_kv);
+    }
+
+    #[test]
     fn test_load() {
         let mut store =
             create_store_with_test_data("test_load", vec![("key1", "val1"), ("key2", "val2")]);
 
         // reset index and file, then reload
         store.index.clear();
-        store.f.seek(SeekFrom::Start(0)).expect("seek");
+        store.f.rewind().expect("seek");
         store.load().expect("load");
 
         let expected_loaded_index: HashMap<ByteString, u64> =
