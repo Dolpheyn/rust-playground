@@ -47,7 +47,7 @@ impl ActionKV {
         loop {
             let start_position = f.stream_position()?;
 
-            let kv = match ActionKV::process_record(&mut f) {
+            let kv = match ActionKV::parse_record_at_current_position(&mut f) {
                 Ok(kv) => kv,
                 Err(err) => match err.kind() {
                     io::ErrorKind::UnexpectedEof => {
@@ -72,7 +72,7 @@ impl ActionKV {
     //  u32        u32       u32       [u8; key_len]   [u8; val_len]
     //
     //  panics if the stored checksum in the metadata is not equal to the calculated checksum.
-    fn process_record<R: Read>(f: &mut R) -> io::Result<KeyValuePair> {
+    fn parse_record_at_current_position<R: Read>(f: &mut R) -> io::Result<KeyValuePair> {
         // Read metadata
         let checksum = f.read_u32::<LittleEndian>()?;
         let key_len = f.read_u32::<LittleEndian>()?;
@@ -102,11 +102,9 @@ impl ActionKV {
 
         let key_len = key.len();
         let val_len = value.len();
-
         let mut data_buf = ByteString::with_capacity(key_len + val_len);
         data_buf.extend_from_slice(&key);
         data_buf.extend_from_slice(&value);
-
         let checksum = CRC_32.checksum(&data_buf);
 
         let start_position = f.stream_position()?;
@@ -119,6 +117,21 @@ impl ActionKV {
         self.index.insert(key.to_vec(), start_position);
 
         Ok(())
+    }
+
+    // Lookup the position of the key in the index, then read the store file at the position &
+    // return the value
+    pub fn get(&mut self, key: &ByteStr) -> io::Result<Option<ByteString>> {
+        let pos = match self.index.get(key) {
+            None => return Ok(None),
+            Some(pos) => *pos,
+        };
+
+        let mut f = BufReader::new(&mut self.f);
+        f.seek(SeekFrom::Start(pos))?;
+
+        let kv = ActionKV::parse_record_at_current_position(&mut f)?;
+        Ok(Some(kv.value))
     }
 }
 
@@ -149,7 +162,7 @@ mod tests {
     }
 
     #[test]
-    fn test_process_record() {
+    fn test_parse_record_at_current_position() {
         let checksum = &[216, 251, 175, 55];
         let u32_4_little_endian = &[4, 0, 0, 0];
         let key = "key1".as_bytes();
@@ -162,7 +175,8 @@ mod tests {
         data_buf.extend_from_slice(key.clone()); // key
         data_buf.extend_from_slice(value.clone()); // value
 
-        let got_kv = ActionKV::process_record(&mut data_buf.as_slice()).expect("process_record");
+        let got_kv = ActionKV::parse_record_at_current_position(&mut data_buf.as_slice())
+            .expect("parse_record_at_current_position");
         let expected_kv = KeyValuePair {
             key: key.to_vec(),
             value: value.to_vec(),
@@ -196,5 +210,22 @@ mod tests {
         ]);
 
         assert_eq!(store.index, expected_index);
+    }
+
+    #[test]
+    fn test_get() {
+        let mut store = create_store_with_test_data(
+            "test_get",
+            vec![("hoho", "hehe"), ("aaa", "bbb"), ("ccc", "ddd")],
+        );
+
+        let val_ccc = store.get("ccc".as_bytes()).expect("get ccc");
+        assert_eq!(val_ccc, Some(ByteString::from("ddd".as_bytes())));
+
+        let val_hoho = store.get("hoho".as_bytes()).expect("get hoho");
+        assert_eq!(val_hoho, Some(ByteString::from("hehe".as_bytes())));
+
+        let val_aaa = store.get("aaa".as_bytes()).expect("get ccc");
+        assert_eq!(val_aaa, Some(ByteString::from("bbb".as_bytes())));
     }
 }
